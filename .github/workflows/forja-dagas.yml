@@ -1,49 +1,27 @@
-name: Forja de Dagas TWRP
+name: Forja TCC Tostadora
 on: [workflow_dispatch]
 
 jobs:
   forjar:
     runs-on: ubuntu-22.04
     steps:
-      - name: Clonar templo
-        uses: actions/checkout@v4
-
-      - name: Instalar armas de forja
-        run: sudo apt-get update && sudo apt-get install -y gcc-multilib make
-
-      - name: Desempacar TCC
-        run: tar -xjf tcc-0.9.27.tar.bz2
-
-      - name: Forjar TCC estático
+      - name: Instala dependencias
         run: |
-          cd tcc-0.9.27
-          ./configure --cc=gcc --prefix=/tmp/tcc-forja
-          sed -i 's/bcheck.o//' lib/Makefile
-          sed -i '/bcheck.c/d' lib/Makefile
-          make LDFLAGS=-static
+          sudo apt-get update
+          sudo apt-get install -y git make gcc gcc-aarch64-linux-gnu
+
+      - name: Compila TCC estático ARM64
+        run: |
+          git clone --depth=1 --branch=release_0_9_27 https://repo.or.cz/tinycc.git
+          cd tinycc
+          ./configure --cpu=aarch64 --cross-prefix=aarch64-linux-gnu- --config-musl --prefix=/tmp/tcc --enable-static
+          make -j$(nproc)
           make install
-          strip /tmp/tcc-forja/bin/tcc
-          
-      - name: Desempacar Plotutils
-        run: tar -xzf plotutils-2.6.tar.gz
+          strip /tmp/tcc/bin/tcc
+          tar -czf /tmp/tcc-arm64.tar.gz -C /tmp tcc
 
-      - name: Forjar libplot.a estática
-        run: |
-          cd plotutils-2.6
-          CC=/tmp/tcc-forja/bin/tcc ./configure --disable-shared --enable-static --without-x --prefix=/tmp/plot-forja CFLAGS=-O2
-          make LDFLAGS=-static
-          make install
-          strip /tmp/plot-forja/lib/libplot.a
-          
-      - name: Empacar las dagas
-        run: |
-          mkdir dagas
-          cp /tmp/tcc-forja/bin/tcc dagas/
-          cp /tmp/plot-forja/lib/libplot.a dagas/
-          tar -czf dagas-twrp.tar.gz dagas/
-          
-      - name: Subir dagas al altar
+      - name: Sube el artefacto
         uses: actions/upload-artifact@v4
         with:
-          name: dagas-twrp
-          path: dagas-twrp.tar.gz
+          name: tcc-arm64-tostadora
+          path: /tmp/tcc-arm64.tar.gz
