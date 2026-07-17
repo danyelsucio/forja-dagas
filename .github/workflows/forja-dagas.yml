@@ -17,7 +17,7 @@ jobs:
       - name: Forjar TCC estático
         run: |
           cd tcc-0.9.27
-          ./configure --cc=gcc --enable-static --disable-shared --prefix=/tmp/tcc-forja
+          ./configure --cc=gcc --disable-bcheck --prefix=/tmp/tcc-forja
           make LDFLAGS=-static
           make install
           strip /tmp/tcc-forja/bin/tcc
