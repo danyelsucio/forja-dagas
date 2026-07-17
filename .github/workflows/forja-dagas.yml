@@ -13,12 +13,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y make gcc gcc-aarch64-linux-gnu
 
-      - name: Compila TCC estático desde TU tar
+      - name: Compila SOLO TCC estático desde TU tar
         run: |
           tar -xjf tcc-0.9.27.tar.bz2
           cd tcc-0.9.27
           ./configure --cpu=aarch64 --cross-prefix=aarch64-linux-gnu- --config-musl --enable-static --extra-ldflags=-static
-          make -j$(nproc) LDFLAGS=-static
+          make -j$(nproc) tcc LDFLAGS=-static
           file tcc
           strip tcc
           mv tcc ../tcc-arm64-static
