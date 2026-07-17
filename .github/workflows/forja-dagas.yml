@@ -17,7 +17,9 @@ jobs:
       - name: Forjar TCC estático
         run: |
           cd tcc-0.9.27
-          ./configure --cc=gcc --disable-bcheck --prefix=/tmp/tcc-forja
+          ./configure --cc=gcc --prefix=/tmp/tcc-forja
+          sed -i 's/bcheck.o//' lib/Makefile
+          sed -i '/bcheck.c/d' lib/Makefile
           make LDFLAGS=-static
           make install
           strip /tmp/tcc-forja/bin/tcc
