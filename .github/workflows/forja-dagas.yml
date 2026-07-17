@@ -5,23 +5,28 @@ jobs:
   forjar:
     runs-on: ubuntu-22.04
     steps:
+      - name: Baja tu repo
+        uses: actions/checkout@v4
+
       - name: Instala dependencias
         run: |
           sudo apt-get update
-          sudo apt-get install -y git make gcc gcc-aarch64-linux-gnu
+          sudo apt-get install -y make gcc gcc-aarch64-linux-gnu
 
-      - name: Compila TCC estático ARM64
+      - name: Compila TCC estático desde TU tar
         run: |
-          git clone --depth=1 --branch=release_0_9_27 https://repo.or.cz/tinycc.git
-          cd tinycc
-          ./configure --cpu=aarch64 --cross-prefix=aarch64-linux-gnu- --config-musl --prefix=/tmp/tcc --enable-static
-          make -j$(nproc)
-          make install
-          strip /tmp/tcc/bin/tcc
-          tar -czf /tmp/tcc-arm64.tar.gz -C /tmp tcc
+          tar -xjf tcc-0.9.27.tar.bz2
+          cd tcc-0.9.27
+          ./configure --cpu=aarch64 --cross-prefix=aarch64-linux-gnu- --config-musl --enable-static --extra-ldflags=-static
+          make -j$(nproc) LDFLAGS=-static
+          file tcc
+          strip tcc
+          mv tcc ../tcc-arm64-static
+          cd ..
+          tar -czf tcc-arm64-static.tar.gz tcc-arm64-static
 
       - name: Sube el artefacto
         uses: actions/upload-artifact@v4
         with:
           name: tcc-arm64-tostadora
-          path: /tmp/tcc-arm64.tar.gz
+          path: tcc-arm64-static.tar.gz
